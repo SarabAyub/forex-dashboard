@@ -11,9 +11,11 @@ import {
 import { scaleTime } from 'd3-scale';
 import { utcMinute } from 'd3-time';
 import { timeFormat } from 'd3-time-format';
+import { Container } from '@mui/material';
 
 const ChartPage = () => {
   const [quotes, setQuotes] = useState([]);
+  const [error, setError] = useState(null);
   const sessionId = localStorage.getItem('sessionId');
   const websocketUrl = `ws://212.117.171.68:5000/OnQuote?id=${sessionId}`;
 
@@ -27,16 +29,16 @@ const ChartPage = () => {
   }, [sessionId, subscribe]);
 
   useEffect(() => {
+    
     if (isSuccess && subscribeData === 'OK') {
       console.log('Subscription successful, connecting to WebSocket...');
       const socket = new WebSocket(websocketUrl);
 
       socket.onmessage = (event) => {
-        const rawQuote = JSON.parse(event.data);
-        console.log('WebSocket message:', rawQuote);
-
-        if (rawQuote.type === 'Quote' && rawQuote.data.symbol === 'EURUSD') {
-          try {
+        
+        try {
+          const rawQuote = JSON.parse(event.data);
+          if (rawQuote.type === 'Quote' && rawQuote.data.symbol === 'EURUSD') {
             const { time, bid, ask, volume } = rawQuote.data;
             const date = new Date(time);
 
@@ -52,14 +54,16 @@ const ChartPage = () => {
             };
 
             setQuotes((prev) => [...prev, newQuote]);
-          } catch (err) {
-            console.error('Error parsing WebSocket message:', err);
+            console.log('Received new quote:', quotes);
           }
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
         }
       };
 
       socket.onerror = (error) => {
         console.error('WebSocket error:', error);
+        setError('WebSocket connection failed.');
       };
 
       return () => {
@@ -68,22 +72,26 @@ const ChartPage = () => {
       };
     } else if (subscribeData && subscribeData !== 'OK') {
       console.error('Subscription failed:', subscribeData);
+      setError('Subscription failed.');
     }
   }, [isSuccess, subscribeData, websocketUrl, quotes]);
 
-  console.log('Quotes:', quotes);
-
   const xScale = scaleTime();
-  const xAccessor = (d) => d?.date;
+  const xAccessor = (d) => d?.date || new Date(); 
   const xExtents = [
-    quotes.length > 100 ? quotes[quotes.length - 100].date : quotes[0]?.date,
-    quotes[quotes.length - 1]?.date,
+    quotes.length > 100 ? quotes[quotes.length - 100].date : quotes[0]?.date || new Date(),
+    quotes[quotes.length - 1]?.date || new Date(),
   ];
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <h1>EURUSD Chart</h1>
-      {quotes.length > 0 ? (
+      {error ? (
+        <p style={{ color: 'red' }}>{error}</p>
+      ) : quotes.length > 0 ? (
+        <Container sx={{background: 'white',
+          width: '800px',
+        }}>
         <ChartCanvas
           height={400}
           width={800}
@@ -100,6 +108,7 @@ const ChartPage = () => {
             <CandlestickSeries width={plotDataLengthBarWidth} />
           </Chart>
         </ChartCanvas>
+        </Container>
       ) : (
         <p>Waiting for quotes...</p>
       )}
