@@ -4,7 +4,7 @@ import { useLazyConnectQuery } from '../features/apiSlice';
 import { useDispatch } from 'react-redux';
 import { setSessionId } from '../features/sessionSlice';
 import { Button, TextField, Box, Typography } from '@mui/material';
-import ErrorDisplay from './ErrorDisplay';
+import ErrorDisplay from '../components/core/ErrorDisplay';
 
 const LoginPage = () => {
   const navigate = useNavigate();
