@@ -2,23 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import useWebSocket from '../../hooks/useWebSocket';
 import ChartRenderer from '../../components/chart/ChartRenderer';
-import { Container, CircularProgress, Typography } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { CircularProgress, Typography } from '@mui/material';
+import { FlexCol, FlexRow, OptionsContainer, StyledContainer } from './ChartPage.styles';
 import { useLazySubscribeQuery } from '../../features/apiSlice';
 import Dropdown from '../../components/core/dropdown/dropdown';
-
-const StyledContainer = styled(Container)(({ theme }) => ({
-  background: theme.palette.background.paper,
-  borderRadius: '8px',
-  boxShadow: theme.shadows[4],
-  padding: '20px',
-  marginTop: '20px',
-  width: '800px',
-}));
+import LogoutButton from '../../components/logout-button/LogoutButton';
 
 const ChartPage = () => {
   const [quotes, setQuotes] = useState([]);
-  const [chartType, setChartType] = useState('candlestick'); 
+  const [chartType, setChartType] = useState('candlestick');
   const [subscribeSymbol, setSubscribeSymbol] = useState('EURUSD');
   const [subscribe] = useLazySubscribeQuery();
   const sessionId = useSelector((state) => state.session.sessionId);
@@ -26,17 +18,15 @@ const ChartPage = () => {
   const MAX_QUOTES = 500;
   const { data: websocketData, error, closeSocket } = useWebSocket(websocketUrl);
 
-  // Handle subscription when sessionId changes
   useEffect(() => {
     if (sessionId) {
       console.log('Subscribing with sessionId:', sessionId);
       subscribe({ id: sessionId, symbol: subscribeSymbol });
     }
-  }, [sessionId, subscribe , subscribeSymbol]);
+  }, [sessionId, subscribe, subscribeSymbol]);
 
-  // Process WebSocket messages
   useEffect(() => {
-    if (websocketData && websocketData.type === 'Quote' && websocketData.data.symbol ===  subscribeSymbol) {
+    if (websocketData && websocketData.type === 'Quote' && websocketData.data.symbol === subscribeSymbol) {
       const { time, bid, ask, volume } = websocketData.data;
       const date = new Date(time);
       const lastQuote = quotes[quotes.length - 1] || { close: (bid + ask) / 2 };
@@ -66,44 +56,52 @@ const ChartPage = () => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <FlexCol >
       <Typography variant="h4" component="h1" gutterBottom>
         {subscribeSymbol} Chart
       </Typography>
-      <Dropdown
-        label="Subscribe Symbol"
-        value={subscribeSymbol}
-        options={[
-          { label: 'EURUSD', value: 'EURUSD' },
-          { label: 'GBPUSD', value: 'GBPUSD' },
-          { label: 'USDJPY', value: 'USDJPY' },
-          { label: 'AUDUSD', value: 'AUDUSD' },
-        ]}
-        onChange={handleSubscribeSymbolChange}
-      />
-      <Dropdown
-        label="Chart Type"
-        value={chartType}
-        options={[
-          { label: 'Candlestick', value: 'candlestick' },
-          { label: 'Line', value: 'line' },
-          { label: 'Bar', value: 'bar' },
-          { label: 'Area', value: 'area' },
-        ]}
-        onChange={setChartType}
-      />
-      {error ? (
-        <Typography variant="body1" color="error">
-          WebSocket Error: {error.message}
-        </Typography>
-      ) : quotes.length > 0 ? (
-        <StyledContainer>
-          <ChartRenderer quotes={quotes} chartType={chartType} />
-        </StyledContainer>
-      ) : (
-        <CircularProgress />
-      )}
-    </div>
+      <FlexRow>
+        {error ? (
+          <Typography variant="body1" color="error">
+            WebSocket Error: {error.message}
+          </Typography>
+        ) : quotes.length > 0 ? (
+          <StyledContainer>
+            <ChartRenderer quotes={quotes} chartType={chartType} />
+          </StyledContainer>
+        ) : (
+          <StyledContainer>
+            <CircularProgress />
+            <Typography variant="body1">Waiting for quotes...</Typography>
+          </StyledContainer>
+        )}
+        <OptionsContainer>
+          <Dropdown
+            label="Subscribe Symbol"
+            value={subscribeSymbol}
+            options={[
+              { label: 'EURUSD', value: 'EURUSD' },
+              { label: 'GBPUSD', value: 'GBPUSD' },
+              { label: 'USDJPY', value: 'USDJPY' },
+              { label: 'AUDUSD', value: 'AUDUSD' },
+            ]}
+            onChange={handleSubscribeSymbolChange}
+          />
+          <Dropdown
+            label="Chart Type"
+            value={chartType}
+            options={[
+              { label: 'Candlestick', value: 'candlestick' },
+              { label: 'Line', value: 'line' },
+              { label: 'Bar', value: 'bar' },
+              { label: 'Area', value: 'area' },
+            ]}
+            onChange={setChartType}
+          />
+          <LogoutButton closeSocket={closeSocket} />
+        </OptionsContainer>
+      </FlexRow>
+    </FlexCol>
   );
 };
 

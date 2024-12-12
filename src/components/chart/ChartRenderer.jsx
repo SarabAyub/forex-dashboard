@@ -57,7 +57,7 @@ const ChartRenderer = ({ quotes, chartType }) => {
       >
         <Chart id={1} yExtents={(d) => [d.high, d.low]}>
           <XAxis axisAt="bottom" orient="bottom" tickFormat={timeFormat('%H:%M')} />
-          <YAxis axisAt="left" orient="left" ticks={4} />
+          <YAxis axisAt="left" orient="left" ticks={5} />
           {renderChart()}
         </Chart>
       </ChartCanvas>

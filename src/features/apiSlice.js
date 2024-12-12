@@ -5,10 +5,10 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: 'http://212.117.171.68:5000',
     prepareHeaders: (headers) => {
-      headers.set('accept', 'text/plain'); // Ensure the backend sends plain text
+      headers.set('accept', 'text/plain'); 
       return headers;
     },
-    responseHandler: (response) => response.text(), // Parse the response as text
+    responseHandler: (response) => response.text(), 
   }),
   endpoints: (builder) => ({
     connect: builder.query({

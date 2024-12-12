@@ -16,8 +16,7 @@ const useWebSocket = (url) => {
 
     socketRef.current.onmessage = (event) => {
       const newData = JSON.parse(event.data);
-      setData(JSON.parse(event.data));
-      // console.log('WebSocket message received:', newData);
+      setData(newData);
     };
 
     socketRef.current.onerror = (event) => {
@@ -35,6 +34,7 @@ const useWebSocket = (url) => {
   const closeSocket = () => {
     if (socketRef.current) {
       socketRef.current.close();
+      socketRef.current = null;
       console.log('WebSocket manually closed');
     }
   };
